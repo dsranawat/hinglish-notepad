@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hinglish → Devanagari / Kruti Dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F7F4EC;
+    --paper-raised: #FFFFFF;
+    --ink: #211C14;
+    --ink-soft: #5A5245;
+    --navy: #22345C;
+    --navy-deep: #172642;
+    --brass: #A9752E;
+    --brass-soft: #D9C6A0;
+    --line: #DBD3C0;
+    --good: #3C6B4B;
+    --radius: 3px;
+    --serif: "Source Serif 4", Georgia, serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --deva: "Noto Sans Devanagari", "Mangal", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1B1812; --paper-raised: #242019; --ink: #EDE7D9; --ink-soft: #B4AA95;
+      --navy: #7C93C4; --navy-deep: #A6B9E0; --brass: #D9A85C; --brass-soft: #4A3D26; --line: #3B3427;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1B1812; --paper-raised: #242019; --ink: #EDE7D9; --ink-soft: #B4AA95;
+    --navy: #7C93C4; --navy-deep: #A6B9E0; --brass: #D9A85C; --brass-soft: #4A3D26; --line: #3B3427;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+  header { margin-bottom: 22px; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+  header h1 {
+    font-family: var(--serif); font-weight: 600; font-size: 1.7rem; margin: 0 0 6px;
+    color: var(--navy-deep);
+  }
+  header p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; max-width: 62ch; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 16px 14px; display: flex; flex-direction: column;
+  }
+  .panel-label {
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em; color: var(--ink-soft);
+    margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
+  }
+  textarea#input {
+    width: 100%; min-height: 220px; resize: vertical; border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 12px; font-family: var(--sans); font-size: 1rem; background: var(--paper); color: var(--ink);
+  }
+  textarea#input:focus { outline: 2px solid var(--navy); outline-offset: 1px; }
+
+  .toggle {
+    display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .toggle button {
+    border: none; background: var(--paper); color: var(--ink-soft); font-family: var(--sans);
+    font-size: 0.82rem; font-weight: 500; padding: 6px 12px; cursor: pointer;
+  }
+  .toggle button.active { background: var(--navy); color: #fff; }
+
+  .output-box {
+    min-height: 220px; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px;
+    background: var(--paper); overflow-wrap: break-word; white-space: pre-wrap;
+  }
+  .output-box.deva { font-family: var(--deva); font-size: 1.35rem; line-height: 1.9; }
+  .output-box.kd { font-family: "Courier New", monospace; font-size: 1.05rem; line-height: 1.7; }
+
+  .hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 8px; }
+  .hint strong { color: var(--ink); }
+
+  .actions { display: flex; gap: 8px; margin-top: 10px; }
+  button.btn {
+    font-family: var(--sans); font-size: 0.85rem; font-weight: 500; padding: 7px 14px;
+    border-radius: var(--radius); border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer;
+  }
+  button.btn.secondary { background: transparent; color: var(--navy); }
+  :root[data-theme="dark"] button.btn.secondary, @media (prefers-color-scheme: dark) { }
+  button.btn:active { transform: translateY(1px); }
+  button.btn.copied { background: var(--good); border-color: var(--good); }
+
+  section.dict {
+    margin-top: 26px; border-top: 1px solid var(--line); padding-top: 18px;
+  }
+  section.dict h2 {
+    font-family: var(--serif); font-size: 1.1rem; font-weight: 600; margin: 0 0 4px; color: var(--navy-deep);
+  }
+  section.dict > p.desc { margin: 0 0 14px; color: var(--ink-soft); font-size: 0.88rem; max-width: 68ch; }
+  .dict-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .dict-form input {
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 7px 10px; font-family: var(--sans); font-size: 0.9rem;
+    background: var(--paper-raised); color: var(--ink);
+  }
+  .dict-form input[name="hinglish"] { width: 160px; }
+  .dict-form input[name="devanagari"] { width: 180px; font-family: var(--deva); font-size: 1.05rem; }
+  ul.dict-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  ul.dict-list li {
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 8px; font-size: 0.85rem;
+    display: flex; align-items: center; gap: 8px; background: var(--paper-raised);
+  }
+  ul.dict-list li .dev { font-family: var(--deva); font-size: 1.05rem; }
+  ul.dict-list li button {
+    border: none; background: none; color: var(--ink-soft); cursor: pointer; font-size: 0.95rem; line-height: 1; padding: 0;
+  }
+  ul.dict-list li button:hover { color: #b23a3a; }
+
+  footer { margin-top: 30px; font-size: 0.78rem; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hinglish → Devanagari / Kruti Dev</h1>
+    <p>Type Hindi using the English keyboard on the left. Get live Devanagari and, when you switch fonts, Kruti Dev–encoded text on the right — ready to paste into Word or Notepad.</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-label">TYPE HINGLISH</div>
+      <textarea id="input" placeholder="e.g. vakil sahab, kal appeal ki sunwai hai" autofocus></textarea>
+    </div>
+    <div class="panel">
+      <div class="panel-label">
+        <span>OUTPUT</span>
+        <div class="toggle" role="group" aria-label="Output font">
+          <button id="btnMangal" class="active" type="button">Mangal (Unicode)</button>
+          <button id="btnKD" type="button">Kruti Dev</button>
+        </div>
+      </div>
+      <div id="output" class="output-box deva" aria-live="polite"></div>
+      <div class="hint" id="hint"><strong>Mangal / Unicode:</strong> this is standard Hindi text — it will display correctly in Word, WhatsApp, or anywhere, no special font needed.</div>
+      <div class="actions">
+        <button class="btn" id="copyBtn" type="button">Copy output</button>
+        <button class="btn secondary" id="clearBtn" type="button">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="dict">
+    <h2>Fix a word</h2>
+    <p class="desc">If a word doesn't come out right, teach it here — it's saved in this browser and used every time from then on, for both Mangal and Kruti Dev output.</p>
+    <form class="dict-form" id="dictForm">
+      <input name="hinglish" placeholder="Hinglish, e.g. peshi" required>
+      <input name="devanagari" placeholder="Correct Devanagari, e.g. पेशी" required>
+      <button class="btn" type="submit">Save</button>
+    </form>
+    <ul class="dict-list" id="dictList"></ul>
+  </section>
+
+  <footer>
+    Best-effort transliteration — proofread before filing. Retroflex/aspirate precision: use capital <strong>T, Th, D, Dh, N</strong> for ट ठ ड ढ ण, and capital <strong>Sh</strong> for ष, where the default lowercase spelling would be wrong.
+  </footer>
+</div>
+
+<script>
+// ===================== UNICODE DEVANAGARI -> KRUTI DEV =====================
+
+const VOWEL_KD = { // independent vowels
+  "अ":"v", "आ":"vk", "इ":"b", "ई":"bZ", "उ":"m", "ऊ":"Å", "ऋ":"_",
+  "ए":",", "ऐ":",s", "ओ":"vks", "औ":"vkS"
+};
+
+const MATRA_KD = { // dependent vowel signs (matras) - applied AFTER consonant cluster in KD, except chhoti-i handled specially
+  "ा":"k", "ि":"f", "ी":"h", "ु":"q", "ू":"w", "ृ":"`", "े":"s", "ै":"S", "ो":"ks", "ौ":"kS", "ॉ":"‚"
+};
+
+const ANUSVARA_ETC = { "ं":"a", "ँ":"¡", "ः":"%" };
+
+const FULL_KD = { // full consonant form (with inherent 'a'), used when nothing follows in halant
+  "क":"d","ख":"[k","ग":"x","घ":"?k","ङ":"³",
+  "च":"p","छ":"N","ज":"t","झ":">","ञ":"¥",
+  "ट":"V","ठ":"B","ड":"M","ढ":"<","ण":".k",
+  "त":"r","थ":"Fk","द":"n","ध":"/k","न":"u",
+  "प":"i","फ":"Q","ब":"c","भ":"Hk","म":"e",
+  "य":";","र":"j","ल":"y","व":"o",
+  "श":"'k","ष":"\"k","स":"l","ह":"g",
+  "ळ":"G",
+  "क़":"d+","ख़":"[+k","ग़":"x+","ज़":"t+","ड़":"M+","ढ़":"<+","फ़":"Q+","य़":";+"
+};
+
+const HALF_KD = { // half (conjunct) form, used when followed by another consonant via halant
+  "क":"D","ख":"[","ग":"X","घ":"?","ङ":"³~",
+  "च":"P","छ":"N~","ज":"T","झ":"÷","ञ":"¥~",
+  "ट":"V~","ठ":"B~","ड":"M~","ढ":"<~","ण":".",
+  "त":"R","थ":"F","द":")","ध":"è","न":"U",
+  "प":"I","फ":"¶","ब":"C","भ":"H","म":"E",
+  "य":";~","र":"j~","ल":"Y","व":"O",
+  "श":"'","ष":"\"","स":"L","ह":"º"
+};
+
+// Hard-coded ligature conjuncts (unique glyphs, not simple half+full)
+// Longest (most Unicode chars) first so greedy matching works.
+const CONJUNCTS = [
+  ["क्ष्", "{"], ["क्ष", "{k"],
+  ["त्र्", "«"], ["त्र", "="],
+  ["ज्ञ", "K"],
+  ["श्र", "J"],
+  ["द्य", "|"], ["द्व", "}"],
+  ["छ्य", "Nî"], ["ट्य", "Vî"], ["ठ्य", "Bî"], ["ड्य", "Mî"], ["ढ्य", "<î"],
+  ["ट्र", "Vª"], ["ड्र", "Mª"], ["ढ्र", "<ªª"], ["छ्र", "Nª"],
+  ["क्र", "Ø"], ["फ्र", "Ý"], ["ग्र", "xz"], ["प्र", "ç"],
+  ["द्र", "æ"], ["र्द्र", "nzZ"],
+  ["ह्न", "à"], ["ह्य", "á"], ["ह्म", "ã"], ["ह्र", "ºz"], ["हृ", "â"],
+  ["त्त्", "Ù"], ["त्त", "Ùk"], ["क्त", "ä"], ["न्न्", "™"], ["न्न", "é"], ["द्ध", ")"],
+  ["दृ", "–"], ["कृ", "—"],
+  ["रु", "#"], ["रू", ":"],
+];
+
+const CONSONANTS = new Set(Object.keys(FULL_KD));
+const HALANT = "्";
+const NUKTA = "़";
+
+function isConsonant(ch) { return CONSONANTS.has(ch); }
+
+// Tokenize into syllable units: each unit is either
+//  { type:'syllable', cluster:[consonants...], matra: <matra char or ''>, hasReph: bool }
+//  { type:'vowel', ch }
+//  { type:'other', ch }
+function tokenize(text) {
+  const tokens = [];
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    const ch = text[i];
+    if (isConsonant(ch)) {
+      let cluster = [ch];
+      let j = i + 1;
+      // absorb nukta directly on this consonant
+      if (text[j] === NUKTA) { j++; }
+      // absorb conjunct chain: halant + consonant, repeatedly
+      while (text[j] === HALANT && isConsonant(text[j + 1])) {
+        cluster.push(text[j + 1]);
+        j += 2;
+        if (text[j] === NUKTA) j++;
+      }
+      // trailing dangling halant (explicit half form at word end, e.g. "क्" alone)
+      let danglingHalant = false;
+      if (text[j] === HALANT && !isConsonant(text[j + 1])) {
+        danglingHalant = true;
+        j++;
+      }
+      // trailing matra / anusvara / visarga / chandrabindu
+      let matra = '';
+      if (!danglingHalant && MATRA_KD[text[j]]) { matra = text[j]; j++; }
+      let trailing = '';
+      if (ANUSVARA_ETC[text[j]]) { trailing = text[j]; j++; }
+      tokens.push({ type: 'syllable', cluster, matra, danglingHalant, trailing });
+      i = j;
+    } else if (VOWEL_KD[ch]) {
+      let j = i + 1;
+      let trailing = '';
+      if (ANUSVARA_ETC[text[j]]) { trailing = text[j]; j++; }
+      tokens.push({ type: 'vowel', ch, trailing });
+      i = j;
+    } else {
+      tokens.push({ type: 'other', ch });
+      i += 1;
+    }
+  }
+  return tokens;
+}
+
+function clusterToKD(cluster, danglingHalant) {
+  // Try to match the whole cluster (joined by halant) against known ligature conjuncts first.
+  const joined = cluster.join(HALANT);
+  for (const [uni, kd] of CONJUNCTS) {
+    const bare = uni.replace(/्$/, ''); // conjunct table entries may or may not include trailing halant
+    if (bare === joined) return kd;
+  }
+  // Fallback: encode each consonant - half form for all but the last, full form for the last
+  // (unless the whole cluster ends in a dangling halant, i.e. every member is a half form).
+  let out = '';
+  for (let k = 0; k < cluster.length; k++) {
+    const isLast = k === cluster.length - 1;
+    const useHalf = !isLast || danglingHalant;
+    const c = cluster[k];
+    if (useHalf) {
+      out += HALF_KD[c] || (FULL_KD[c] + '~');
+    } else {
+      out += FULL_KD[c] || '';
+    }
+  }
+  return out;
+}
+
+function unicodeToKrutiDev(text) {
+  const tokens = tokenize(text);
+  let out = '';
+  for (const t of tokens) {
+    if (t.type === 'other') { out += t.ch; continue; }
+    if (t.type === 'vowel') { out += VOWEL_KD[t.ch] + (ANUSVARA_ETC[t.trailing] || ''); continue; }
+    // syllable
+    let reph = false;
+    let cluster = t.cluster;
+    if (cluster.length > 1 && cluster[0] === 'र') {
+      reph = true;
+      cluster = cluster.slice(1);
+    }
+    let body = clusterToKD(cluster, t.danglingHalant);
+    if (t.matra === 'ि') {
+      body = 'f' + body; // chhoti-i moves before the consonant cluster
+    } else if (t.matra) {
+      body = body + MATRA_KD[t.matra];
+    }
+    if (t.trailing) body += ANUSVARA_ETC[t.trailing];
+    if (reph) body += 'Z';
+    out += body;
+  }
+  return out;
+}
+
+// ===================== HINGLISH (ROMAN) -> DEVANAGARI =====================
+
+// Common whole-word overrides for high frequency / ambiguous words (checked first, longest match).
+const WORD_DICT = {
+  "hai":"है","hain":"हैं","hoon":"हूँ","hun":"हूँ","ho":"हो","tha":"था","thi":"थी","the":"थे",
+  "nahi":"नहीं","nahin":"नहीं","haan":"हाँ","aur":"और","ya":"या","ki":"की","ka":"का","ke":"के",
+  "ko":"को","se":"से","me":"में","mein":"में","par":"पर","hi":"ही","bhi":"भी","to":"तो",
+  "kya":"क्या","kyun":"क्यों","kyunki":"क्योंकि","kaise":"कैसे","kab":"कब","kahan":"कहाँ","kaun":"कौन",
+  "yeh":"यह","ye":"ये","woh":"वह","wo":"वह","iska":"इसका","uska":"उसका","apna":"अपना","apne":"अपने",
+  "main":"मैं","hum":"हम","tum":"तुम","aap":"आप","unhe":"उन्हें","unko":"उनको","usne":"उसने","maine":"मैंने",
+  "kar":"कर","karna":"करना","karta":"करता","karti":"करती","karte":"करते","kiya":"किया","kiye":"किए","hoga":"होगा","hogi":"होगी",
+  "diya":"दिया","liya":"लिया","gaya":"गया","gayi":"गई","jaise":"जैसे","liye":"लिए","waqt":"वक़्त",
+  "sab":"सब","sabhi":"सभी","kuch":"कुछ","koi":"कोई","is":"इस","us":"उस","in":"इन","un":"उन",
+  "namaste":"नमस्ते","dhanyavad":"धन्यवाद","shukriya":"शुक्रिया",
+  // legal / everyday-legal vocabulary
+  "adalat":"अदालत","vakil":"वकील","kanoon":"कानून","kanooni":"कानूनी","nyay":"न्याय","nyayalaya":"न्यायालय",
+  "appeal":"अपील","hukum":"हुक्म","aadesh":"आदेश","yachika":"याचिका","gawah":"गवाह",
+  "saboot":"सबूत","dastavez":"दस्तावेज़","samman":"सम्मन","zamanat":"ज़मानत","sunwai":"सुनवाई",
+  "vivaad":"विवाद","samjhauta":"समझौता","anubandh":"अनुबंध","dhara":"धारा","paksh":"पक्ष","pratipaksh":"प्रतिपक्ष",
+  "anusar":"अनुसार","mera":"मेरा","meri":"मेरी","mere":"मेरे","tera":"तेरा","teri":"तेरी","tere":"तेरे",
+  "hamara":"हमारा","hamari":"हमारी","hamare":"हमारे","uska":"उसका","uski":"उसकी","uske":"उसके",
+  "padh":"पढ़","padhna":"पढ़ना","padha":"पढ़ा","padhi":"पढ़ी","padhe":"पढ़े","padhte":"पढ़ते","padhkar":"पढ़कर",
+  "likh":"लिख","likhna":"लिखना","likha":"लिखा","likhi":"लिखी","likhe":"लिखे","likhte":"लिखते",
+  "raha":"रहा","rahi":"रही","rahe":"रहे","rehna":"रहना","kaha":"कहा","kahi":"कही","kahe":"कहे","kehna":"कहना",
+  "diya":"दिया","dena":"देना","liya":"लिया","lena":"लेना","gaya":"गया","gayi":"गई","jana":"जाना",
+  "samay":"समय","waqt":"वक़्त","aaj":"आज","kal":"कल","abhi":"अभी","phir":"फिर","lekin":"लेकिन","magar":"मगर",
+  "bahut":"बहुत","zaroor":"ज़रूर","zaroorat":"ज़रूरत","pata":"पता","matlab":"मतलब","baat":"बात",
+  "sahi":"सही","galat":"गलत","theek":"ठीक","thik":"ठीक",
+  "sahab":"साहब","saheb":"साहब","kripya":"कृपया","taiyar":"तैयार","taiyaar":"तैयार",
+  "rakhiye":"रखिए","rakhna":"रखना","rakha":"रखा","rakhi":"रखी","rakhe":"रखे",
+  "aapka":"आपका","aapki":"आपकी","aapke":"आपके","unka":"उनका","unki":"उनकी","unke":"उनके",
+  "iske":"इसके","iski":"इसकी","uske":"उसके","jaisa":"जैसा","jaisi":"जैसी","waisa":"वैसा","waisi":"वैसी",
+  "pesh":"पेश","peshi":"पेशी","faisla":"फैसला","faisala":"फैसला","hukm":"हुक्म","jamanat":"ज़मानत",
+  "vakalatnama":"वकालतनामा","muvakkil":"मुवक्किल","gawahi":"गवाही","bayaan":"बयान","bayan":"बयान",
+  "arzi":"अर्ज़ी","darkhast":"दरख़ास्त","shikayat":"शिकायत","fauran":"फ़ौरन","jald":"जल्द","jaldi":"जल्दी",
+  "zaroor":"ज़रूर","mumkin":"मुमकिन","namumkin":"नामुमकिन","asaan":"आसान","mushkil":"मुश्किल",
+  "sunna":"सुनना","suna":"सुना","suni":"सुनी","sune":"सुने","bolna":"बोलना","bola":"बोला","boli":"बोली",
+  "dena":"देना","dekhna":"देखना","dekha":"देखा","dekhi":"देखी","dekhe":"देखे","milna":"मिलना","mila":"मिला",
+  "chahiye":"चाहिए","chahta":"चाहता","chahti":"चाहती","chahte":"चाहते","zaruri":"ज़रूरी"
+};
+
+// Consonant clusters, longest first, matched greedily. Uppercase used for retroflex/aspirate-precision variants.
+const CONS_MAP = [
+  ["ksh","क्ष"], ["gy","ज्ञ"], ["jn","ज्ञ"], ["shr","श्र"], ["tr","त्र"],
+  ["kh","ख"], ["gh","घ"], ["chh","छ"], ["ch","च"], ["jh","झ"],
+  ["ny","ञ"], ["Th","ठ"], ["th","थ"], ["Dh","ढ"], ["dh","ध"],
+  ["ph","फ"], ["bh","भ"], ["sh","श"], ["Sh","ष"],
+  ["T","ट"], ["D","ड"], ["N","ण"],
+  ["k","क"], ["g","ग"], ["j","ज"], ["t","त"], ["d","द"], ["n","न"],
+  ["p","प"], ["f","फ"], ["b","ब"], ["m","म"], ["y","य"], ["r","र"],
+  ["l","ल"], ["v","व"], ["w","व"], ["s","स"], ["S","ष"], ["h","ह"], ["L","ळ"],
+  ["q","क़"], ["z","ज़"], ["x","क्स"]
+];
+
+const VOWEL_MAP_INITIAL = [ // when a vowel starts a syllable (independent form)
+  ["aa","आ"], ["ee","ई"], ["oo","ऊ"], ["ai","ऐ"], ["au","औ"],
+  ["a","अ"], ["i","इ"], ["u","उ"], ["e","ए"], ["o","ओ"], ["A","आ"], ["I","ई"], ["U","ऊ"], ["R","ऋ"], ["E","ऐ"], ["O","औ"]
+];
+
+const VOWEL_MAP_MATRA = [ // when a vowel follows a consonant (dependent form / matra)
+  ["aa","ा"], ["ee","ी"], ["oo","ू"], ["ai","ै"], ["au","ौ"],
+  ["a",""], ["i","ि"], ["u","ु"], ["e","े"], ["o","ो"], ["A","ा"], ["I","ी"], ["U","ू"], ["R","ृ"], ["E","ै"], ["O","ौ"]
+];
+
+function matchLongest(str, i, table) {
+  for (const [k, v] of table) {
+    if (str.startsWith(k, i)) return [k, v];
+  }
+  return null;
+}
+
+function transliterateWord(word) {
+  let out = '';
+  let i = 0;
+  const n = word.length;
+  let lastWasConsonant = false;
+  while (i < n) {
+    // explicit anusvara / visarga / chandrabindu markers
+    if (word[i] === 'M' && lastWasConsonant === false) { /* fallthrough to normal m handling below */ }
+    if (word.startsWith("ं", i) || word.startsWith("H", i) && lastWasConsonant) {
+      // 'H' after a syllable = visarga
+      out += 'ः'; i++; lastWasConsonant = false; continue;
+    }
+    const consMatch = matchLongest(word, i, CONS_MAP);
+    if (consMatch) {
+      const [key, dev] = consMatch;
+      i += key.length;
+      // look ahead for a vowel to attach as matra; else inherent 'a' (silent)
+      const vMatch = matchLongest(word, i, VOWEL_MAP_MATRA);
+      if (vMatch) {
+        let matra = vMatch[1];
+        const atWordEnd = (i + vMatch[0].length) === n;
+        // word-final single "i" / "u" is usually meant as long ी / ू in casual Hinglish spelling
+        if (atWordEnd && vMatch[0] === 'i') matra = 'ी';
+        else if (atWordEnd && vMatch[0] === 'u') matra = 'ू';
+        out += dev + matra;
+        i += vMatch[0].length;
+      } else if (word[i] === 'M') {
+        out += dev + 'ं'; i++;
+      } else if (word[i] === '~' && word[i+1] === 'n') {
+        out += dev + 'ँ'; i += 2;
+      } else {
+        out += dev; // inherent 'a', silent - matches natural Hindi spelling
+      }
+      lastWasConsonant = true;
+      continue;
+    }
+    const vInit = matchLongest(word, i, VOWEL_MAP_INITIAL);
+    if (vInit) {
+      out += vInit[1];
+      i += vInit[0].length;
+      lastWasConsonant = false;
+      continue;
+    }
+    if (word[i] === 'M') { out += 'ं'; i++; lastWasConsonant = false; continue; }
+    // unrecognized character - pass through
+    out += word[i];
+    i++;
+    lastWasConsonant = false;
+  }
+  return out;
+}
+
+function hinglishToDevanagari(text) {
+  // split preserving whitespace/punctuation as separators
+  return text.replace(/[A-Za-z]+/g, (word) => {
+    const lower = word.toLowerCase();
+    if (WORD_DICT[lower]) return WORD_DICT[lower];
+    return transliterateWord(word);
+  });
+}
+
+function hinglishToKrutiDev(text) {
+  return unicodeToKrutiDev(hinglishToDevanagari(text));
+}
+
+</script>
+<script>
+(function () {
+  const STORAGE_KEY = 'hinglishCustomDict';
+  let customDict = {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) customDict = JSON.parse(raw);
+  } catch (e) { customDict = {}; }
+
+  function saveDict() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(customDict)); } catch (e) {}
+  }
+
+  // wrap hinglishToDevanagari to consult custom dictionary first
+  const baseHinglishToDevanagari = hinglishToDevanagari;
+  function convertDevanagari(text) {
+    return text.replace(/[A-Za-z]+/g, function (word) {
+      const lower = word.toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(customDict, lower)) return customDict[lower];
+      if (Object.prototype.hasOwnProperty.call(WORD_DICT, lower)) return WORD_DICT[lower];
+      return transliterateWord(word);
+    });
+  }
+
+  const input = document.getElementById('input');
+  const output = document.getElementById('output');
+  const hint = document.getElementById('hint');
+  const btnMangal = document.getElementById('btnMangal');
+  const btnKD = document.getElementById('btnKD');
+  const copyBtn = document.getElementById('copyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const dictForm = document.getElementById('dictForm');
+  const dictList = document.getElementById('dictList');
+
+  let mode = 'mangal';
+
+  function render() {
+    const dev = convertDevanagari(input.value);
+    if (mode === 'mangal') {
+      output.textContent = dev;
+      output.className = 'output-box deva';
+      hint.innerHTML = '<strong>Mangal / Unicode:</strong> this is standard Hindi text — it will display correctly in Word, WhatsApp, or anywhere, no special font needed.';
+    } else {
+      const kd = unicodeToKrutiDev(dev);
+      output.textContent = kd;
+      output.className = 'output-box kd';
+      hint.innerHTML = '<strong>Kruti Dev:</strong> this text only looks like Hindi once you paste it into a document and apply an actual Kruti Dev font (e.g. Kruti Dev 010). It will look like scrambled English right here — that\'s expected.';
+    }
+  }
+
+  input.addEventListener('input', render);
+
+  btnMangal.addEventListener('click', function () {
+    mode = 'mangal'; btnMangal.classList.add('active'); btnKD.classList.remove('active'); render();
+  });
+  btnKD.addEventListener('click', function () {
+    mode = 'kd'; btnKD.classList.add('active'); btnMangal.classList.remove('active'); render();
+  });
+
+  copyBtn.addEventListener('click', function () {
+    navigator.clipboard.writeText(output.textContent).then(function () {
+      copyBtn.textContent = 'Copied';
+      copyBtn.classList.add('copied');
+      setTimeout(function () { copyBtn.textContent = 'Copy output'; copyBtn.classList.remove('copied'); }, 1400);
+    }).catch(function () {
+      copyBtn.textContent = 'Select & copy manually';
+      setTimeout(function () { copyBtn.textContent = 'Copy output'; }, 1800);
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    input.value = '';
+    render();
+    input.focus();
+  });
+
+  function renderDictList() {
+    dictList.innerHTML = '';
+    const words = Object.keys(customDict).sort();
+    if (words.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'No custom words yet.';
+      li.style.color = 'var(--ink-soft)';
+      dictList.appendChild(li);
+      return;
+    }
+    words.forEach(function (w) {
+      const li = document.createElement('li');
+      const label = document.createElement('span');
+      label.textContent = w + ' → ';
+      const dev = document.createElement('span');
+      dev.className = 'dev';
+      dev.textContent = customDict[w];
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.title = 'Remove';
+      del.textContent = '✕';
+      del.addEventListener('click', function () {
+        delete customDict[w];
+        saveDict();
+        renderDictList();
+        render();
+      });
+      li.appendChild(label);
+      li.appendChild(dev);
+      li.appendChild(del);
+      dictList.appendChild(li);
+    });
+  }
+
+  dictForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const fd = new FormData(dictForm);
+    const hinglish = (fd.get('hinglish') || '').toString().trim().toLowerCase();
+    const dev = (fd.get('devanagari') || '').toString().trim();
+    if (!hinglish || !dev) return;
+    customDict[hinglish] = dev;
+    saveDict();
+    dictForm.reset();
+    renderDictList();
+    render();
+  });
+
+  renderDictList();
+  render();
+})();
+</script>
+</body>
+</html>

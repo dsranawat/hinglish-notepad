@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Print Preview</title>
+<style>
+  @font-face {
+    font-family: "Noto Sans Devanagari";
+    src: url("../assets/fonts/NotoSansDevanagari-Regular.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "KDBundledFallback";
+    src: url("../assets/fonts/KrutiDev010.ttf") format("truetype");
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; background: #6b6f76;
+    font-family: "Segoe UI", Arial, sans-serif;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 52px;
+    background: #22345c; color: #fff; display: flex; align-items: center;
+    padding: 0 16px; gap: 10px; z-index: 10; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .toolbar .title { font-size: 0.9rem; font-weight: 600; margin-right: auto; }
+  .toolbar button {
+    font-family: inherit; font-size: 0.85rem; font-weight: 500; padding: 7px 16px;
+    border-radius: 3px; border: 1px solid #fff; background: transparent; color: #fff; cursor: pointer;
+  }
+  .toolbar button.primary { background: #fff; color: #22345c; border-color: #fff; }
+  .toolbar button:disabled { opacity: 0.5; cursor: default; }
+
+  .scroll-area {
+    position: absolute; top: 52px; bottom: 0; left: 0; right: 0;
+    overflow: auto; display: flex; justify-content: center; padding: 28px 0 60px;
+  }
+
+  /* Realistic A4-proportioned page preview (210mm x 297mm, ratio ~0.707) */
+  .page {
+    width: 700px; min-height: 990px;
+    background: #fff; box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    padding: 56px 60px;
+    flex-shrink: 0;
+  }
+
+  header.printhead { text-align: center; border-bottom: 1px solid #999; padding-bottom: 10px; margin-bottom: 26px; }
+  header.printhead .date { font-size: 11pt; color: #444; }
+  header.printhead .mode { font-size: 11pt; color: #444; margin-top: 2px; font-weight: bold; }
+  #content { white-space: pre-wrap; word-wrap: break-word; font-size: 15pt; line-height: 1.9; color: #111; }
+  #content.deva { font-family: "Noto Sans Devanagari", sans-serif; }
+  #content.kd { font-family: "Kruti Dev 010", "KDBundledFallback", "Courier New", monospace; }
+
+  /* The toolbar and gray backdrop are on-screen preview chrome only — a physical
+     printer or a PDF has no "Cancel"/"Print..." buttons to show, and Electron's
+     print()/printToPDF() otherwise capture the whole page exactly as it's laid
+     out on screen, toolbar included. Print media rules strip all of that back
+     down to just the page content actually being printed/exported. */
+  @page { margin: 20mm 18mm; }
+  @media print {
+    .toolbar { display: none; }
+    html, body { background: #fff; }
+    .scroll-area { position: static; padding: 0; display: block; }
+    .page { width: auto; min-height: 0; box-shadow: none; padding: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="title" id="toolbarTitle">Print Preview</span>
+    <button type="button" id="cancelBtn">Cancel</button>
+    <button type="button" id="confirmBtn" class="primary">Print...</button>
+  </div>
+  <div class="scroll-area">
+    <div class="page">
+      <header class="printhead">
+        <div class="date" id="printDate"></div>
+        <div class="mode" id="printMode"></div>
+      </header>
+      <div id="content"></div>
+    </div>
+  </div>
+  <script src="print.js"></script>
+</body>
+</html>

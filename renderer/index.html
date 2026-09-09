@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'">
+<title>Hinglish Notepad — Legal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hinglish → Devanagari / Kruti Dev</h1>
+    <p>Type Hindi using the English keyboard on the left. Live Devanagari (Mangal/Unicode) or Kruti Dev–encoded text appears on the right — nothing you type is ever auto-replaced.</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-label">TYPE HINGLISH</div>
+      <textarea id="input" placeholder="e.g. vakil sahab, kal appeal ki sunwai hai" autofocus></textarea>
+    </div>
+    <div class="panel">
+      <div class="panel-label">
+        <span>OUTPUT</span>
+        <div class="toggle" role="group" aria-label="Output font">
+          <button id="btnMangal" class="active" type="button">Mangal (Unicode)</button>
+          <button id="btnKD" type="button">Kruti Dev</button>
+        </div>
+      </div>
+      <div id="output" class="output-box deva" aria-live="polite"></div>
+      <div class="hint" id="hint"><strong>Mangal / Unicode:</strong> this is standard Hindi text — it will display correctly in Word, WhatsApp, or anywhere, no special font needed.</div>
+      <div class="actions">
+        <button class="btn" id="copyBtn" type="button">Copy output</button>
+        <button class="btn secondary" id="clearBtn" type="button">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="dict">
+    <h2>Fix a word</h2>
+    <p class="desc">If a word doesn't come out right, teach it here — it's saved on this computer and used every time from then on, for both Mangal and Kruti Dev output.</p>
+    <form class="dict-form" id="dictForm">
+      <input name="hinglish" placeholder="Hinglish, e.g. peshi" required>
+      <input name="devanagari" placeholder="Correct Devanagari, e.g. पेशी" required>
+      <button class="btn" type="submit">Save</button>
+    </form>
+    <ul class="dict-list" id="dictList"></ul>
+    <div class="dict-actions">
+      <button class="btn secondary small" id="importDictBtn" type="button">Import Dictionary...</button>
+      <button class="btn secondary small" id="exportDictBtn" type="button">Export Dictionary...</button>
+    </div>
+  </section>
+
+  <footer class="footer-note">
+    Best-effort transliteration — proofread before filing. Typing is not case-sensitive (capitals from names or sentence starts never change the output). For a long vowel sound, double the letter — <strong>aa, ee, oo</strong> — e.g. "raat" for रात. For a retroflex letter, add an apostrophe — <strong>t' d' n' th' dh' sh'</strong> — for ट ड ण ठ ढ ष, e.g. "t'op" for टोप. Type <strong>/</strong> or <strong>|</strong> for a danda (।), and doubled — <strong>//</strong> or <strong>||</strong> — for a double danda (॥); a plain period always stays a period. If a specific word still comes out wrong, use <strong>"Fix a word"</strong> below to correct it permanently.
+  </footer>
+</div>
+
+<div class="statusbar" id="statusbar">
+  <span id="stModeLabel">Mode: Mangal (Unicode)</span>
+  <span id="stWordCount">0 words</span>
+  <span id="stSaved">Saved</span>
+  <span class="spacer"></span>
+  <span class="kdIndicator">
+    <span class="dot pending" id="kdDot"></span>
+    <span id="kdStatusText">Kruti Dev font: checking…</span>
+    <button id="kdInstallBtn" class="btn small" type="button" hidden>Install Kruti Dev font</button>
+  </span>
+</div>
+
+<script type="module" src="renderer.js"></script>
+</body>
+</html>
